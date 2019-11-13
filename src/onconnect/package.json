@@ -1,7 +1,7 @@
 {
-  "name": "function",
+  "name": "onconnect",
   "version": "1.0.0",
-  "devDependencies": {
+  "dependencies": {
     "aws-sdk": "~2"
   }
 }
