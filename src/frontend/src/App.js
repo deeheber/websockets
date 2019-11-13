@@ -22,7 +22,8 @@ class App extends Component {
    * This function establishes the connect with the websocket and also ensures constant reconnection if connection closes
    */
   connect = () => {
-      var ws = new WebSocket("wss://p5i9fz3adl.execute-api.us-west-2.amazonaws.com/development");
+      // TODO: Add actual websocket API here
+      var ws = new WebSocket("wss://t8i9fz3aed.execute-api.us-east-2.amazonaws.com/development");
       let that = this; // cache the this
       var connectInterval;
 
