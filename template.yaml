@@ -1,3 +1,158 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
-Resources: {}
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Websocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Description: !Sub
+        - ${ResourceName} From Stack ${StackTagName} Environment ${EnvironmentTagName}
+        - ResourceName: Websocket
+      Name: !Sub
+        - ${StackTagName}-${EnvironmentTagName}-${ResourceName}
+        - ResourceName: Websocket
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+  WebsocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref Websocket
+      StageName: !Ref EnvironmentAPIGatewayStageName
+      DeploymentId: !Ref WebsocketDeployment
+  WebsocketDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    Properties:
+      ApiId: !Ref Websocket
+    DependsOn:
+      - WebsocketRouteconnect
+      - WebsocketRouteconnectResponse
+      - WebsocketRoutedisconnect
+      - WebsocketRoutedisconnectResponse
+      - WebsocketRouteconnectIntegrationResponse
+      - WebsocketRoutedisconnectIntegrationResponse
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      TableName: !Sub ${AWS::StackName}-Table
+  onconnect:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-onconnect
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: onconnect
+      CodeUri: src/onconnect
+      Handler: index.handler
+      Runtime: nodejs10.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          TABLE_ARN: !GetAtt Table.Arn
+  ondisconnect:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-ondisconnect
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: ondisconnect
+      CodeUri: src/ondisconnect
+      Handler: index.handler
+      Runtime: nodejs10.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          TABLE_ARN: !GetAtt Table.Arn
+  WebsocketRouteconnect:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref Websocket
+      RouteKey: $connect
+      Target: !Sub integrations/${WebsocketRouteconnectIntegration}
+  WebsocketRouteconnectResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref Websocket
+      RouteId: !Ref WebsocketRouteconnect
+      RouteResponseKey: $default
+  WebsocketRoutedisconnect:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref Websocket
+      RouteKey: $disconnect
+      Target: !Sub integrations/${WebsocketRoutedisconnectIntegration}
+  WebsocketRoutedisconnectResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref Websocket
+      RouteId: !Ref WebsocketRoutedisconnect
+      RouteResponseKey: $default
+  WebsocketRouteconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref Websocket
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${onconnect.Arn}/invocations
+  WebsocketRouteconnectIntegrationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref onconnect
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*/$connect
+  WebsocketRouteconnectIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref Websocket
+      IntegrationId: !Ref WebsocketRouteconnectIntegration
+      IntegrationResponseKey: $default
+  WebsocketRoutedisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref Websocket
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ondisconnect.Arn}/invocations
+  WebsocketRoutedisconnectIntegrationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ondisconnect
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*/$disconnect
+  WebsocketRoutedisconnectIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref Websocket
+      IntegrationId: !Ref WebsocketRoutedisconnectIntegration
+      IntegrationResponseKey: $default
+Parameters:
+  StackTagName:
+    Type: String
+    Description: Stack Name (injected by Stackery at deployment time)
+  EnvironmentTagName:
+    Type: String
+    Description: Environment Name (injected by Stackery at deployment time)
+  EnvironmentAPIGatewayStageName:
+    Type: String
+    Description: Environment name used for API Gateway Stage names (injected by Stackery at deployment time)
