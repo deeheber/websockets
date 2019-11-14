@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import config from './config';
 
 class App extends Component {
   constructor(props) {
@@ -22,8 +23,7 @@ class App extends Component {
    * This function establishes the connect with the websocket and also ensures constant reconnection if connection closes
    */
   connect = () => {
-      // TODO: Add actual websocket API here
-      var ws = new WebSocket("wss://t8i9fz3aed.execute-api.us-east-2.amazonaws.com/development");
+      var ws = new WebSocket(config.connection);
       let that = this; // cache the this
       var connectInterval;
 
