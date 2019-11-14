@@ -1,2 +1,2 @@
-function-id: onecho
+function-id: echo
 template-path: ../../template.yaml

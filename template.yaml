@@ -29,9 +29,10 @@ Resources:
       - WebsocketRoutedisconnectResponse
       - WebsocketRouteconnectIntegrationResponse
       - WebsocketRoutedisconnectIntegrationResponse
-      - WebsocketRouteonecho
-      - WebsocketRouteonechoResponse
       - WebsocketRouteonechoIntegrationResponse
+      - WebsocketRoutetest
+      - WebsocketRoutetestResponse
+      - WebsocketRoutetestIntegrationResponse
   Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -149,14 +150,26 @@ Resources:
       ApiId: !Ref Websocket
       IntegrationId: !Ref WebsocketRoutedisconnectIntegration
       IntegrationResponseKey: $default
-  onecho:
+  WebsocketRoutetest:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref Websocket
+      RouteKey: test
+      Target: !Sub integrations/${WebsocketRoutetestIntegration}
+  WebsocketRoutetestResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref Websocket
+      RouteId: !Ref WebsocketRoutetest
+      RouteResponseKey: $default
+  echo:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-onecho
+      FunctionName: !Sub ${AWS::StackName}-echo
       Description: !Sub
         - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: onecho
-      CodeUri: src/onecho
+        - ResourceName: echo
+      CodeUri: src/echo
       Handler: index.handler
       Runtime: nodejs10.x
       MemorySize: 3008
@@ -164,37 +177,25 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
-  WebsocketRouteonechoIntegration:
+  WebsocketRoutetestIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref Websocket
       IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${onecho.Arn}/invocations
-  WebsocketRouteonechoIntegrationPermission:
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${echo.Arn}/invocations
+  WebsocketRoutetestIntegrationPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref onecho
+      FunctionName: !Ref echo
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*/echo
-  WebsocketRouteonechoIntegrationResponse:
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*/test
+  WebsocketRoutetestIntegrationResponse:
     Type: AWS::ApiGatewayV2::IntegrationResponse
     Properties:
       ApiId: !Ref Websocket
-      IntegrationId: !Ref WebsocketRouteonechoIntegration
+      IntegrationId: !Ref WebsocketRoutetestIntegration
       IntegrationResponseKey: $default
-  WebsocketRouteonecho:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref Websocket
-      RouteKey: echo
-      Target: !Sub integrations/${WebsocketRouteonechoIntegration}
-  WebsocketRouteonechoResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
-    Properties:
-      ApiId: !Ref Websocket
-      RouteId: !Ref WebsocketRouteonecho
-      RouteResponseKey: $default
 Parameters:
   StackTagName:
     Type: String

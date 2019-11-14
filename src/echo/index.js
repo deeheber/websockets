@@ -14,6 +14,6 @@ exports.handler = async (event) => {
     console.log(e);
   }
   return {
-    body: 'Echoing your message: ' + echo
+    body: JSON.stringify(`Echoing the message: ${echo}`)
   };
 };

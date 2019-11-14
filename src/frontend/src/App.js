@@ -76,7 +76,9 @@ class App extends Component {
   };
 
   sendMessage = () => {
-      console.log('Message sent');
+    const { ws } = this.state;
+    console.log('Sending message...');
+    ws.send(JSON.stringify({ action: 'echo', echo: 'Hello there' }));
   };
 
   render() {
