@@ -81,18 +81,11 @@ class App extends Component {
     ws.send(JSON.stringify({ action: 'sendmessage', data: 'Hello world' }));
   };
 
-  echo = () => {
-    const { ws } = this.state;
-    console.log('Sending thing to echo...');
-    ws.send(JSON.stringify({ action: 'test', echo: 'Important stuff' }));
-  }
-
   render() {
       return (
       <div>
           <h1>Check the console</h1>
           <button onClick={this.sendMessage}>Send message</button>
-          <button onClick={this.echo}>Echo</button>
         </div>
       );
   }

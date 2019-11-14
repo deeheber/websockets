@@ -7,7 +7,6 @@ const { TABLE_NAME } = process.env;
 exports.handler = async event => {
   // Log the event argument for debugging and for use in local development.
   console.log(JSON.stringify(event, undefined, 2));
-
   let connectionData;
 
   try {
@@ -18,14 +17,30 @@ exports.handler = async event => {
 
   const apigwManagementApi = new AWS.ApiGatewayManagementApi({
     apiVersion: '2018-11-29',
-    endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
+    endpoint: process.env.API_CONNECTIONS_ENDPOINT
   });
 
-  const postData = JSON.parse(event.body).data;
+  const eventType = event.Records[0].eventName;
+  let message = '';
+
+  if (eventType === 'ObjectRemoved:Delete') {
+    message = 'Translation removed from s3 bucket';
+  } else if (eventType === 'ObjectCreated:Put') {
+    message = 'Translation complete and put in s3 buckt';
+  }
+
+  const postData = {
+    bucketName: event.Records[0].s3.bucket.name,
+    bucketKey: event.Records[0].s3.object.key,
+    message
+  };
+
+  console.log('Post data is: ', JSON.stringify(postData));
 
   const postCalls = connectionData.Items.map(async ({ id }) => {
     try {
-      await apigwManagementApi.postToConnection({ ConnectionId: id, Data: postData }).promise();
+      console.log(`Sending to connection: ${id}`);
+      await apigwManagementApi.postToConnection({ ConnectionId: id, Data: JSON.stringify(postData) }).promise();
     } catch (e) {
       if (e.statusCode === 410) {
         console.log(`Found stale connection, deleting ${id}`);
