@@ -1,2 +1,2 @@
-function-id: echo
+function-id: sendMessageFunction
 template-path: ../../template.yaml
