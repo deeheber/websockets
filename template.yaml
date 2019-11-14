@@ -32,9 +32,6 @@ Resources:
       - WebsocketRoutesendmessage
       - WebsocketRoutesendmessageResponse
       - WebsocketRoutesendmessageIntegrationResponse
-      - WebsocketRoutetest
-      - WebsocketRoutetestResponse
-      - WebsocketRoutetestIntegrationResponse
   Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -210,45 +207,18 @@ Resources:
       ApiId: !Ref Websocket
       IntegrationId: !Ref WebsocketRoutesendmessageIntegration
       IntegrationResponseKey: $default
-  WebsocketRoutetest:
-    Type: AWS::ApiGatewayV2::Route
+  Bucket:
+    Type: AWS::S3::Bucket
     Properties:
-      ApiId: !Ref Websocket
-      RouteKey: test
-      Target: !Sub integrations/${WebsocketRoutetestIntegration}
-  WebsocketRoutetestResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
-    Properties:
-      ApiId: !Ref Websocket
-      RouteId: !Ref WebsocketRoutetest
-      RouteResponseKey: $default
-  WebsocketRoutetestIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref Websocket
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${echo.Arn}/invocations
-  WebsocketRoutetestIntegrationPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref echo
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*/test
-  WebsocketRoutetestIntegrationResponse:
-    Type: AWS::ApiGatewayV2::IntegrationResponse
-    Properties:
-      ApiId: !Ref Websocket
-      IntegrationId: !Ref WebsocketRoutetestIntegration
-      IntegrationResponseKey: $default
-  echo:
+      BucketName: !Sub ${AWS::StackName}-bucket-${AWS::AccountId}
+  BucketPutNotification:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-echo
+      FunctionName: !Sub ${AWS::StackName}-BucketPutNotification
       Description: !Sub
         - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: echo
-      CodeUri: src/echo
+        - ResourceName: BucketPutNotification
+      CodeUri: src/BucketPutNotification
       Handler: index.handler
       Runtime: nodejs10.x
       MemorySize: 3008
@@ -256,6 +226,28 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
+        - Statement:
+            - Effect: Allow
+              Action:
+                - execute-api:ManageConnections
+              Resource:
+                - !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+      Events:
+        Bucket:
+          Type: S3
+          Properties:
+            Bucket: !Ref Bucket
+            Events:
+              - s3:ObjectCreated:*
+              - s3:ObjectRemoved:*
+      Environment:
+        Variables:
+          API_URL: !Sub wss://${Websocket}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentAPIGatewayStageName}
+          API_CONNECTIONS_ENDPOINT: !Sub https://${Websocket}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentAPIGatewayStageName}
+          TABLE_NAME: !Ref Table
+          TABLE_ARN: !GetAtt Table.Arn
 Parameters:
   StackTagName:
     Type: String
