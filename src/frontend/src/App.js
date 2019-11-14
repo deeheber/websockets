@@ -37,6 +37,10 @@ class App extends Component {
           clearTimeout(connectInterval); // clear Interval on on open of websocket connection
       };
 
+      ws.onmessage = e => {
+        console.log("WebSocket message received:", e);
+      };
+
       // websocket onclose event listener
       ws.onclose = e => {
           console.log(
