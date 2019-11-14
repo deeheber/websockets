@@ -75,9 +75,16 @@ class App extends Component {
       if (!ws || ws.readyState === WebSocket.CLOSED) this.connect(); //check if websocket instance is closed, if so call `connect` function.
   };
 
+  sendMessage = () => {
+      console.log('Message sent');
+  };
+
   render() {
       return (
-        <div>Check the console</div>
+      <div>
+          <h1>Check the console</h1>
+          <button onClick={this.sendMessage}>Send message</button>
+        </div>
       );
   }
 }
