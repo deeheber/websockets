@@ -44,15 +44,6 @@ class App extends Component {
     };
   };
 
-  sendMessage = () => {
-    const { ws } = this.state;
-    console.log('Sending message...');
-    // Update the message here
-    // Ideally would be dynamic from a form or something
-    const message = { action: 'sendmessage', data: 'Hello world' };
-    ws.send(JSON.stringify(message));
-  };
-
   render() {
     return (
       <div>
