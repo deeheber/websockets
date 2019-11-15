@@ -24,6 +24,7 @@
 7. Open up the frontend on multiple browsers and/or use `wscat` in on the command line and see the messages broadcast to all clients
 
 ## Additional resources
+- [MDN Websocket spec](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
 - [AWS example app](https://github.com/aws-samples/simple-websockets-chat-app)
 - [Building a serverless Websocket server with Stackery](https://aws.amazon.com/blogs/apn/building-a-simple-serverless-websocket-with-stackery-and-aws/)
 - [React and websocket example](https://blog.bitlabstudio.com/a-simple-chat-app-with-react-node-and-websocket-35d3c9835807)
