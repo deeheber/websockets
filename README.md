@@ -7,7 +7,7 @@
 - Very common use case is for chat applications
 
 ## Architecture
-![Image](https://user-images.githubusercontent.com/12616554/68907730-b1efd980-06fd-11ea-9fee-bf2e49ba59a5.png)
+![Image](https://user-images.githubusercontent.com/12616554/68908607-b073e080-0700-11ea-8ef9-492286c2b108.png)
 
 ## Directions to Run
 1. Deploy the app. It's recommended to use [Stackery](https://www.stackery.io/)
