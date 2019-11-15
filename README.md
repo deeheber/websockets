@@ -11,7 +11,7 @@
 
 ## Directions to Run
 1. Deploy the app. It's recommended to use [Stackery](https://www.stackery.io/)
-2. Add the following to `src/frontend/src/config.js`
+2. Find your [websocket URL](https://docs.stackery.io/docs/api/nodes/WebSocketApi/#environment-variables), create a file called `config.js` at `src/frontend/src/config.js`, and add the following:
   ```
   export default {
     connection: < WEBSOCKET URL HERE STARTING WITH wss: >

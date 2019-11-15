@@ -29,9 +29,6 @@ Resources:
       - WebsocketRoutedisconnectResponse
       - WebsocketRouteconnectIntegrationResponse
       - WebsocketRoutedisconnectIntegrationResponse
-      - WebsocketRoutesendmessage
-      - WebsocketRoutesendmessageResponse
-      - WebsocketRoutesendmessageIntegrationResponse
   Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -148,64 +145,6 @@ Resources:
     Properties:
       ApiId: !Ref Websocket
       IntegrationId: !Ref WebsocketRoutedisconnectIntegration
-      IntegrationResponseKey: $default
-  WebsocketRoutesendmessage:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref Websocket
-      RouteKey: sendmessage
-      Target: !Sub integrations/${WebsocketRoutesendmessageIntegration}
-  WebsocketRoutesendmessageResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
-    Properties:
-      ApiId: !Ref Websocket
-      RouteId: !Ref WebsocketRoutesendmessage
-      RouteResponseKey: $default
-  sendMessageFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-sendMessageFunction
-      Description: !Sub
-        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
-        - ResourceName: sendMessageFunction
-      CodeUri: src/sendMessageFunction
-      Handler: index.handler
-      Runtime: nodejs10.x
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
-        - DynamoDBCrudPolicy:
-            TableName: !Ref Table
-        - Statement:
-            - Effect: Allow
-              Action:
-                - execute-api:ManageConnections
-              Resource:
-                - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref Table
-          TABLE_ARN: !GetAtt Table.Arn
-  WebsocketRoutesendmessageIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref Websocket
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${sendMessageFunction.Arn}/invocations
-  WebsocketRoutesendmessageIntegrationPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref sendMessageFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*/sendmessage
-  WebsocketRoutesendmessageIntegrationResponse:
-    Type: AWS::ApiGatewayV2::IntegrationResponse
-    Properties:
-      ApiId: !Ref Websocket
-      IntegrationId: !Ref WebsocketRoutesendmessageIntegration
       IntegrationResponseKey: $default
   Bucket:
     Type: AWS::S3::Bucket

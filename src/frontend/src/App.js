@@ -55,9 +55,8 @@ class App extends Component {
 
   render() {
     return (
-    <div>
-        <h1>Check the console</h1>
-        <button onClick={this.sendMessage}>Send message</button>
+      <div>
+          <h1>Open up your browser console</h1>
       </div>
     );
   }
