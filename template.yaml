@@ -29,6 +29,9 @@ Resources:
       - WebsocketRoutedisconnectResponse
       - WebsocketRouteconnectIntegrationResponse
       - WebsocketRoutedisconnectIntegrationResponse
+      - WebsocketRouteechomessage
+      - WebsocketRouteechomessageResponse
+      - WebsocketRouteechomessageIntegrationResponse
   Table:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -187,6 +190,64 @@ Resources:
           API_CONNECTIONS_ENDPOINT: !Sub https://${Websocket}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentAPIGatewayStageName}
           TABLE_NAME: !Ref Table
           TABLE_ARN: !GetAtt Table.Arn
+  WebsocketRouteechomessage:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref Websocket
+      RouteKey: echomessage
+      Target: !Sub integrations/${WebsocketRouteechomessageIntegration}
+  WebsocketRouteechomessageResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref Websocket
+      RouteId: !Ref WebsocketRouteechomessage
+      RouteResponseKey: $default
+  EchoMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-EchoMessageFunction
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: EchoMessageFunction
+      CodeUri: src/EchoMessageFunction
+      Handler: index.handler
+      Runtime: nodejs10.x
+      MemorySize: 3008
+      Timeout: 60
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+        - Statement:
+            - Effect: Allow
+              Action:
+                - execute-api:ManageConnections
+              Resource:
+                - !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          TABLE_ARN: !GetAtt Table.Arn
+  WebsocketRouteechomessageIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref Websocket
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${EchoMessageFunction.Arn}/invocations
+  WebsocketRouteechomessageIntegrationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref EchoMessageFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Websocket}/*/echomessage
+  WebsocketRouteechomessageIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref Websocket
+      IntegrationId: !Ref WebsocketRouteechomessageIntegration
+      IntegrationResponseKey: $default
 Parameters:
   StackTagName:
     Type: String
