@@ -7,7 +7,7 @@
 - Very common use case is for chat applications
 
 ## Architecture
-![Image](https://user-images.githubusercontent.com/12616554/68908607-b073e080-0700-11ea-8ef9-492286c2b108.png)
+![Image](https://user-images.githubusercontent.com/12616554/68964327-ead78f00-078d-11ea-927f-b9dbccd911f8.png)
 
 ## Directions to Run
 1. Deploy the app. It's recommended to use [Stackery](https://www.stackery.io/)
@@ -20,6 +20,8 @@
 3. `cd src/frontend/src` && `npm install` && `npm start`
 4. Open browser console
 5. Add and remove items from the s3 bucket via the AWS console and see the messages in your browser console
+6. Can also hit the 'send message' button in the web UI to send a message and get an echoed response
+7. Open up the frontend on multiple browsers and/or use `wscat` in on the command line and see the messages broadcast to all clients
 
 ## Additional resources
 - [AWS example app](https://github.com/aws-samples/simple-websockets-chat-app)
