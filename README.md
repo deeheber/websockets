@@ -4,6 +4,10 @@
 - Websockets are helpful when you need to have two way direction between an application and client
 - Use case in this example: receiving a web notification when an item is removed or put into an s3 bucket
 - Very useful when making an http call that takes a while to process for example using AWS Polly or AWS translate
+- Very common use case is for chat applications
+
+## Architecture
+![Image](https://user-images.githubusercontent.com/12616554/68907730-b1efd980-06fd-11ea-9fee-bf2e49ba59a5.png)
 
 ## Directions to Run
 1. Deploy the app. It's recommended to use [Stackery](https://www.stackery.io/)
