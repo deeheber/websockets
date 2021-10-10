@@ -10,8 +10,8 @@
 ![Image](https://user-images.githubusercontent.com/12616554/68964327-ead78f00-078d-11ea-927f-b9dbccd911f8.png)
 
 ## Directions to Run
-1. Deploy the app. It's recommended to use [Stackery](https://www.stackery.io/)
-2. Find your [websocket URL](https://docs.stackery.io/docs/api/nodes/WebSocketApi/#environment-variables), create a file called `config.js` at `src/frontend/src/config.js`, and add the following:
+1. Deploy the app with the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+2. Find your websocket URL in the AWS console, create a file called `config.js` at `src/frontend/src/config.js`, and add the following:
   ```
   export default {
     connection: < WEBSOCKET URL HERE STARTING WITH wss: >
