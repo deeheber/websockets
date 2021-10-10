@@ -251,10 +251,10 @@ Resources:
 Parameters:
   StackTagName:
     Type: String
-    Description: Stack Name (injected by Stackery at deployment time)
+    Description: Stack Name
   EnvironmentTagName:
     Type: String
-    Description: Environment Name (injected by Stackery at deployment time)
+    Description: Environment Name
   EnvironmentAPIGatewayStageName:
     Type: String
-    Description: Environment name used for API Gateway Stage names (injected by Stackery at deployment time)
+    Description: Environment name used for API Gateway Stage names
